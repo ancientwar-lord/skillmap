@@ -1,11 +1,12 @@
 'use client';
 
 import Roadmap from '@/components/Roadmap';
+import ScatteredIcons from '@/components/ScatteredIcons';
 
 const DUMMY_ROADMAPS = [
   {
     $id: '1',
-    title: 'Frontend Developer Path 2024',
+    title: 'Frontend Developer Path 2026',
     isPublic: true,
   },
   {
@@ -88,7 +89,8 @@ const DUMMY_ROADMAP_DATA = [
 ];
 export default function RoadmapPage() {
   return (
-    <div className={`min-h-screen bg-gray-50`}>
+    <div className="relative min-h-screen bg-gray-50">
+      <ScatteredIcons />
       <div className="container mx-auto px-4 py-12">
         <Roadmap
           title="Frontend Developer Path 2024"
