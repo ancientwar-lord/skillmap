@@ -16,8 +16,8 @@ export default function Sidebar({
   isCollapsed = false,
   toggleSidebar,
 }: {
-	isCollapsed?: boolean;
-	toggleSidebar?: () => void;
+  isCollapsed?: boolean;
+  toggleSidebar?: () => void;
 }) {
   const pathname = usePathname();
   const { user, logOut } = useAuth();
@@ -27,17 +27,18 @@ export default function Sidebar({
       name: 'Dashboard',
       href: '/dashboard',
       icon: <LayoutDashboard size={20} />,
-       badge: '0',
+      badge: '0',
     },
-    { name: 'Settings', href: '/settings', icon: <Settings size={20} /> },
     { name: 'Roadmap', href: '/roadmap', icon: <Map size={20} /> },
+    { name: 'Settings', href: '/settings', icon: <Settings size={20} /> },
   ];
 
   return (
     <aside
       className={`hidden md:flex flex-col fixed left-0 top-0 bottom-0 z-40 bg-linear-to-b from-white via-slate-50 to-purple-50/40 border-r border-purple-200/40 transition-all duration-300 ${
         isCollapsed ? 'w-20' : 'w-64'
-      }`}>
+      }`}
+    >
       {/* Toggle Button */}
       <button
         onClick={toggleSidebar}
@@ -55,16 +56,26 @@ export default function Sidebar({
           className={`mb-8 flex items-center ${isCollapsed ? 'justify-center' : 'px-2'}`}
         >
           {isCollapsed ? (
-            <Link href="/dashboard" className="flex items-center justify-center">
+            <Link
+              href="/dashboard"
+              className="flex items-center justify-center"
+            >
               <GraduationCap className="w-8 h-8 text-purple-950" />
             </Link>
           ) : (
-            <Link href="/dashboard" className="text-xl font-bold text-zinc-600 flex items-end whitespace-nowrap pt-4 pl-4">
+            <Link
+              href="/dashboard"
+              className="text-xl font-bold text-zinc-600 flex items-end whitespace-nowrap pt-4 pl-4"
+            >
               <div className="relative flex flex-col items-center">
                 <GraduationCap className="absolute -top-5 -left-4 w-8 h-8 text-purple-950 -rotate-12" />
-                <span className='text-transparent bg-clip-text bg-linear-to-r from-purple-950 to-violet-900/60 text-3xl font-bold'>S</span>
+                <span className="text-transparent bg-clip-text bg-linear-to-r from-purple-950 to-violet-900/60 text-3xl font-bold">
+                  S
+                </span>
               </div>
-              <span className='text-transparent bg-clip-text bg-linear-to-r from-purple-950 to-violet-900/60 '>killmap</span>
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-purple-950 to-violet-900/60 ">
+                killmap
+              </span>
             </Link>
           )}
         </div>
@@ -94,11 +105,13 @@ export default function Sidebar({
                     ? 'text-purple-950'
                     : 'text-purple-950/50 group-hover:text-purple-950'
                 }`}
-              > 
+              >
                 {link.icon}
               </span>
               {!isCollapsed && (
-                <span className={`ml-3 flex-1 whitespace-nowrap ${isActive ? 'text-purple-950 font-semibold' : 'text-purple-950/50 group-hover:text-purple-950'}`}>
+                <span
+                  className={`ml-3 flex-1 whitespace-nowrap ${isActive ? 'text-purple-950 font-semibold' : 'text-purple-950/50 group-hover:text-purple-950'}`}
+                >
                   {link.name}
                 </span>
               )}

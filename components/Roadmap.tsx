@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -36,6 +35,71 @@ interface RoadmapProps {
   roadmapData: RoadmapTask[];
 }
 
+const Roadmap: React.FC<RoadmapProps> = ({
+  title,
+  description,
+  roadmapData = [],
+}) => {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const allSubtasks = roadmapData.flatMap((t) => t.subtasks || []);
+  const totalSub = allSubtasks.length;
+  const completeSub = allSubtasks.filter((s) => s.completed).length;
+  const overallProgress =
+    totalSub === 0 ? 0 : Math.round((completeSub / totalSub) * 100);
+
+  return (
+    <div className="min-h-screen  py-12 px-4 overflow-hidden font-sans ">
+      <div className="max-w-4xl mx-auto bg-sky-50 p-4 rounded-4xl">
+        <header className="sticky top-4 z-40 mb-1">
+          <div className="relative w-full bg-slate-200 rounded-full overflow-hidden">
+            <div className="text-center mb-6">
+              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-3">
+                <span className="bg-clip-text text-transparent bg-linear-to-r from-gray-900 via-blue-800 to-gray-900">
+                  {title}
+                </span>
+              </h1>
+              {description && (
+                <p className="mt-2 text-gray-600">{description}</p>
+              )}
+            </div>
+            <div className="flex justify-between items-end px-1">
+              <span className="pl-14 text-xs font-bold text-gray-500 uppercase tracking-widest">
+                Completed: {completeSub} / {totalSub}
+              </span>
+              <span className="pr-14 text-xs font-bold text-red-900 uppercase tracking-widest">
+                {overallProgress}% Done
+              </span>
+            </div>
+            <Watercomponent progressMeter={overallProgress} />
+            <span className="absolute bottom-0 left-1/2 -translate-x-1/2 text-xs font-bold text-black/20 uppercase tracking-[0.2em]">
+              {overallProgress === 100 ? 'Congratulations!' : `Keep Going!`}
+            </span>
+          </div>
+        </header>
+        <div className="relative pt-10 pb-32">
+          <div className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2">
+            <div className="w-px h-full border-l-2 border-dashed border-indigo-800" />
+          </div>
+          {roadmapData.map((task, index) => (
+            <RoadmapNode
+              key={task.taskId}
+              index={index}
+              task={task}
+              isExpanded={expandedId === task.taskId}
+              onToggle={() =>
+                setExpandedId(expandedId === task.taskId ? null : task.taskId)
+              }
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Roadmap;
+
 const SubtaskList = ({ task }: { task: RoadmapTask }) => {
   return (
     <div className="mt-6 w-full max-w-md mx-auto bg-gray-50 rounded-xl border border-gray-200 overflow-hidden shadow-sm transition-all duration-300 animate-in fade-in slide-in-from-top-4">
@@ -53,16 +117,11 @@ const SubtaskList = ({ task }: { task: RoadmapTask }) => {
             {sub.completed ? (
               <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />
             ) : (
-              <Circle
-                size={18}
-                className="text-gray-700 shrink-0"
-              />
+              <Circle size={18} className="text-gray-700 shrink-0" />
             )}
             <span
               className={`text-sm font-medium ${
-                sub.completed
-                  ? 'text-gray-500 line-through'
-                  : 'text-gray-700'
+                sub.completed ? 'text-gray-500 line-through' : 'text-gray-700'
               }`}
             >
               {sub.title}
@@ -87,7 +146,6 @@ const RoadmapNode = ({
 }) => {
   const [offset, setOffset] = useState(0);
 
-  // Calculate Progress
   const total = task.subtasks.length;
   const completed = task.subtasks.filter((s) => s.completed).length;
   const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
@@ -156,26 +214,28 @@ const RoadmapNode = ({
 
         <div className="w-20 h-20 md:w-24 md:h-24 bg-white rounded-full shadow-lg shadow-gray-200/50 z-20 hover:scale-105 transition-transform duration-300">
           <CircularProgressbarWithChildren
-              value={percentage}
-              strokeWidth={6}
-              styles={buildStyles({
-                pathColor: isCompleted
-                  ? '#10b981'
-                  : percentage > 0
-                    ? '#6366f1'
-                    : '#a5b4fc',
-                trailColor: '#e8ecf4',
-                strokeLinecap: 'round',
-                pathTransitionDuration: 0.8,
-              })}
-            >
+            value={percentage}
+            strokeWidth={6}
+            styles={buildStyles({
+              pathColor: isCompleted
+                ? '#10b981'
+                : percentage > 0
+                  ? '#6366f1'
+                  : '#a5b4fc',
+              trailColor: '#e8ecf4',
+              strokeLinecap: 'round',
+              pathTransitionDuration: 0.8,
+            })}
+          >
             <div
               className={`
               w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center 
               border-2 
               ${
                 isCompleted
-                  ? 'bg-emerald-200/30 border-emerald-100'
+                  ? isExpanded
+                    ? 'bg-emerald-200 border-gray-100'
+                    : 'bg-emerald-200/30 border-emerald-100'
                   : isExpanded
                     ? 'bg-indigo-400 border-indigo-400'
                     : 'bg-white border-gray-100'
@@ -205,72 +265,3 @@ const RoadmapNode = ({
     </div>
   );
 };
-
-const Roadmap: React.FC<RoadmapProps> = ({
-  title,
-  description,
-  roadmapData = [],
-}) => {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  const allSubtasks = roadmapData.flatMap((t) => t.subtasks || []);
-  const totalSub = allSubtasks.length;
-  const completeSub = allSubtasks.filter((s) => s.completed).length;
-  const overallProgress =
-    totalSub === 0 ? 0 : Math.round((completeSub / totalSub) * 100);
-
-  return (
-    <div className="min-h-screen  py-12 px-4 overflow-hidden font-sans ">
-      <div className="max-w-4xl mx-auto bg-sky-50 p-4 rounded-4xl">
-        <header className="sticky top-4 z-40 mb-1">
-          <div className="relative w-full bg-slate-200 rounded-full overflow-hidden">
-            <div className="text-center mb-6">
-              
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-3">
-
-                <span className="bg-clip-text text-transparent bg-linear-to-r from-gray-900 via-blue-800 to-gray-900">
-                  {title}
-                </span>
-              </h1>
-              {description && (
-                <p className="mt-2 text-gray-600">
-                  {description}
-                </p>
-              )}
-            </div>
-            <div className="flex justify-between items-end px-1">
-              <span className="pl-14 text-xs font-bold text-gray-500 uppercase tracking-widest">
-                Completed: {completeSub} / {totalSub}
-              </span>
-              <span className="pr-14 text-xs font-bold text-red-900 uppercase tracking-widest">
-                {overallProgress}% Done
-              </span>
-            </div>
-            <Watercomponent progressMeter={overallProgress} />
-            <span className="absolute bottom-0 left-1/2 -translate-x-1/2 text-xs font-bold text-black/20 uppercase tracking-[0.2em]">
-             {overallProgress === 100 ? "Congratulations!" : `Keep Going!`}
-            </span>
-          </div>
-        </header>
-        <div className="relative pt-10 pb-32">
-                  <div className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2">
-       <div className="w-px h-full border-l-2 border-dashed border-indigo-800" />
-        </div>
-          {roadmapData.map((task, index) => (
-            <RoadmapNode
-              key={task.taskId}
-              index={index}
-              task={task}
-              isExpanded={expandedId === task.taskId}
-              onToggle={() =>
-                setExpandedId(expandedId === task.taskId ? null : task.taskId)
-              }
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default Roadmap;
