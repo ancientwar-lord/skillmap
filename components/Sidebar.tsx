@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   LogIn,
   GraduationCap,
+  Map,
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -29,6 +30,7 @@ export default function Sidebar({
        badge: '0',
     },
     { name: 'Settings', href: '/settings', icon: <Settings size={20} /> },
+    { name: 'Roadmap', href: '/roadmap', icon: <Map size={20} /> },
   ];
 
   return (

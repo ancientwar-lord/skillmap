@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import ClientLayout from '@/components/ClientLayout';
-import './globals.css';
+import '@/styles/globals.css';
 
 export const metadata: Metadata = {
   title: 'Skillmap',

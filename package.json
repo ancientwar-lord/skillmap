@@ -19,6 +19,7 @@
     "next": "16.1.6",
     "pg": "^8.18.0",
     "react": "19.2.3",
+    "react-circular-progressbar": "^2.2.0",
     "react-dom": "19.2.3",
     "zod": "^4.3.6"
   },
