@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
 import {
   X,
   Sparkles,
@@ -62,81 +63,6 @@ function clearChatHistory(key: string) {
   } catch {
     throw new Error('Could not clear chat history from storage.');
   }
-}
-
-// ── Markdown renderer ──
-
-function renderInlineFormatting(text: string): React.ReactNode[] {
-  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return (
-        <strong key={i} className="font-semibold text-gray-900">
-          {part.slice(2, -2)}
-        </strong>
-      );
-    }
-    if (part.startsWith('`') && part.endsWith('`')) {
-      return (
-        <code
-          key={i}
-          className="bg-gray-100 text-indigo-700 px-1.5 py-0.5 rounded text-xs font-mono"
-        >
-          {part.slice(1, -1)}
-        </code>
-      );
-    }
-    return part;
-  });
-}
-
-function renderMarkdown(text: string): React.ReactNode[] {
-  const lines = text.split('\n');
-  const elements: React.ReactNode[] = [];
-
-  lines.forEach((line, i) => {
-    if (line.startsWith('### ')) {
-      elements.push(
-        <h3 key={i} className="text-base font-bold text-gray-800 mt-4 mb-2">
-          {line.slice(4)}
-        </h3>
-      );
-    } else if (line.startsWith('## ')) {
-      elements.push(
-        <h2 key={i} className="text-lg font-bold text-gray-900 mt-4 mb-2">
-          {line.slice(3)}
-        </h2>
-      );
-    } else if (line.startsWith('# ')) {
-      elements.push(
-        <h1 key={i} className="text-xl font-bold text-gray-900 mt-4 mb-2">
-          {line.slice(2)}
-        </h1>
-      );
-    } else if (line.startsWith('- ') || line.startsWith('* ')) {
-      elements.push(
-        <li key={i} className="ml-4 text-sm text-gray-700 list-disc">
-          {renderInlineFormatting(line.slice(2))}
-        </li>
-      );
-    } else if (/^\d+\.\s/.test(line)) {
-      elements.push(
-        <li key={i} className="ml-4 text-sm text-gray-700 list-decimal">
-          {renderInlineFormatting(line.replace(/^\d+\.\s/, ''))}
-        </li>
-      );
-    } else if (line.trim() === '') {
-      elements.push(<br key={i} />);
-    } else {
-      elements.push(
-        <p key={i} className="text-sm text-gray-700 leading-relaxed">
-          {renderInlineFormatting(line)}
-        </p>
-      );
-    }
-  });
-
-  return elements;
 }
 
 // ── Component ──
@@ -462,7 +388,25 @@ const AIResponseOverlay: React.FC<AIResponseOverlayProps> = ({
                     >
                       {msg.role === 'assistant' ? (
                         <div className="prose prose-sm max-w-none">
-                          {renderMarkdown(msg.content)}
+                          <ReactMarkdown
+                            components={{
+                              h1: ({ children }) => <h1 className="text-xl font-bold text-gray-900 mt-4 mb-2">{children}</h1>,
+                              h2: ({ children }) => <h2 className="text-lg font-bold text-gray-900 mt-4 mb-2">{children}</h2>,
+                              h3: ({ children }) => <h3 className="text-base font-bold text-gray-800 mt-4 mb-2">{children}</h3>,
+                              p: ({ children }) => <p className="text-sm text-gray-700 leading-relaxed mb-2">{children}</p>,
+                              ul: ({ children }) => <ul className="list-disc ml-4 space-y-1">{children}</ul>,
+                              ol: ({ children }) => <ol className="list-decimal ml-4 space-y-1">{children}</ol>,
+                              li: ({ children }) => <li className="text-sm text-gray-700">{children}</li>,
+                              strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+                              code: ({ children }) => <code className="bg-gray-100 text-indigo-700 px-1.5 py-0.5 rounded text-xs font-mono">{children}</code>,
+                              pre: ({ children }) => <pre className="bg-gray-900 text-gray-100 rounded-lg p-3 overflow-x-auto text-xs my-2">{children}</pre>,
+                              blockquote: ({ children }) => <blockquote className="border-l-4 border-purple-300 pl-3 italic text-sm text-gray-600 my-2">{children}</blockquote>,
+                              a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-600 underline hover:text-purple-800">{children}</a>,
+                              hr: () => <hr className="my-4 border-gray-200" />,
+                            }}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
                         </div>
                       ) : (
                         <p className="text-sm">{msg.content}</p>

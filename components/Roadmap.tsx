@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
 import {
   Trophy,
   Rocket,
@@ -17,6 +18,7 @@ import {
   ExternalLink,
   Dumbbell,
   Sparkles,
+  GraduationCap,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -167,6 +169,19 @@ const Roadmap: React.FC<RoadmapProps> = ({
     }
   };
 
+  const router = useRouter();
+
+  const navigateToTest = (
+    topic: string,
+    scope: 'subtask' | 'task' | 'roadmap',
+    context?: string
+  ) => {
+    const slug = encodeURIComponent(topic.replace(/\s+/g, '-').toLowerCase());
+    const params = new URLSearchParams({ scope });
+    if (context) params.set('context', encodeURIComponent(context));
+    router.push(`/practice/${slug}?${params.toString()}`);
+  };
+
   const allSubtasks = roadmapData.flatMap((t) => t.subtasks || []);
   const totalSub = allSubtasks.length;
   const completeSub = allSubtasks.filter((s) => s.completed).length;
@@ -210,6 +225,16 @@ const Roadmap: React.FC<RoadmapProps> = ({
               {overallProgress === 100 ? 'Congratulations!' : `Keep Going!`}
             </span>
           </div>
+          {/* Test Skills button for the whole roadmap */}
+          <div className="flex justify-center mt-3">
+            <button
+              onClick={() => navigateToTest(title, 'roadmap', title)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-semibold hover:from-indigo-700 hover:to-purple-700 shadow-md hover:shadow-lg transition-all"
+            >
+              <GraduationCap size={18} />
+              Test All Skills
+            </button>
+          </div>
         </header>
         <div className="relative pt-10 pb-30">
           <div className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2">
@@ -226,6 +251,7 @@ const Roadmap: React.FC<RoadmapProps> = ({
               }
               onToggleSubtask={onToggleSubtask}
               onAiExplain={handleAiExplain}
+              onTestSkill={navigateToTest}
             />
           ))}
         </div>
@@ -244,6 +270,7 @@ const SubtaskList = ({
   task,
   onToggleSubtask,
   onAiExplain,
+  onTestSkill,
 }: {
   task: RoadmapTask;
   onToggleSubtask?: (subtaskId: string) => void;
@@ -255,33 +282,53 @@ const SubtaskList = ({
     existingNotes?: string | null,
     subtaskTitles?: string[]
   ) => void;
+  onTestSkill?: (
+    topic: string,
+    scope: 'subtask' | 'task' | 'roadmap',
+    context?: string
+  ) => void;
 }) => {
   return (
     <div className="mt-6 w-full max-w-md mx-auto bg-gray-50 rounded-xl border border-gray-200 overflow-hidden shadow-sm transition-all duration-300 animate-in fade-in slide-in-from-top-4">
-      {/* Task-level AI tag button */}
-      {task.tag && (
+      {/* Task-level buttons: AI tag + Test Skills */}
+      <div className="flex items-center gap-1">
+        {task.tag && (
+          <button
+            className="flex items-center gap-1 bg-purple-100 hover:bg-purple-200 transition-colors duration-200 cursor-pointer rounded-br-lg px-2.5 py-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAiExplain?.(
+                'task',
+                task.taskId,
+                task.title,
+                undefined,
+                task.ainotes,
+                task.subtasks.map((s) => s.title)
+              );
+            }}
+            aria-label={`Get AI explanation for ${task.tag}`}
+          >
+            <span className="text-[10px] font-semibold text-purple-800 uppercase">
+              {task.tag}
+            </span>
+            <span className="text-[10px] text-purple-500 font-medium">AI</span>
+            <Sparkles className="w-3 h-3 text-purple-500" />
+          </button>
+        )}
+        {/* Test Skills for the whole task */}
         <button
-          className="flex items-center gap-1 bg-purple-100 hover:bg-purple-200 transition-colors duration-200 cursor-pointer rounded-br-lg px-2.5 py-1"
+          className="flex items-center gap-1 bg-blue-100 hover:bg-blue-200 transition-colors duration-200 cursor-pointer rounded-br-lg px-2.5 py-1"
           onClick={(e) => {
             e.stopPropagation();
-            onAiExplain?.(
-              'task',
-              task.taskId,
-              task.title,
-              undefined,
-              task.ainotes,
-              task.subtasks.map((s) => s.title)
-            );
+            onTestSkill?.(task.title, 'task', task.title);
           }}
-          aria-label={`Get AI explanation for ${task.tag}`}
+          aria-label={`Test skills for ${task.title}`}
+          title="Test your skills on this task"
         >
-          <span className="text-[10px] font-semibold text-purple-800 uppercase">
-            {task.tag}
-          </span>
-          <span className="text-[10px] text-purple-500 font-medium">AI</span>
-          <Sparkles className="w-3 h-3 text-purple-500" />
+          <GraduationCap className="w-3 h-3 text-blue-600" />
+          <span className="text-[10px] font-semibold text-blue-700">Test</span>
         </button>
-      )}
+      </div>
 
       <div className="p-4 space-y-2">
         {task.subtasks.map((sub) => (
@@ -359,6 +406,19 @@ const SubtaskList = ({
                 <span className="text-[10px] font-medium opacity-70">AI</span>
                 <Sparkles className="h-3.5 w-3.5" />
               </button>
+
+              {/* Test Skills for subtask */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onTestSkill?.(sub.title, 'subtask', task.title);
+                }}
+                className="flex items-center gap-0.5 p-1 text-gray-400 hover:text-blue-600 transition-colors duration-200 cursor-pointer"
+                aria-label={`Test skills for ${sub.title}`}
+                title="Test your skills"
+              >
+                <GraduationCap className="h-3.5 w-3.5" />
+              </button>
             </div>
           </div>
         ))}
@@ -374,6 +434,7 @@ const RoadmapNode = ({
   onToggle,
   onToggleSubtask,
   onAiExplain,
+  onTestSkill,
 }: {
   task: RoadmapTask;
   index: number;
@@ -387,6 +448,11 @@ const RoadmapNode = ({
     subtaskTitle?: string,
     existingNotes?: string | null,
     subtaskTitles?: string[]
+  ) => void;
+  onTestSkill?: (
+    topic: string,
+    scope: 'subtask' | 'task' | 'roadmap',
+    context?: string
   ) => void;
 }) => {
   const [offset, setOffset] = useState(0);
@@ -528,6 +594,7 @@ const RoadmapNode = ({
           task={task}
           onToggleSubtask={onToggleSubtask}
           onAiExplain={onAiExplain}
+          onTestSkill={onTestSkill}
         />
       )}
 

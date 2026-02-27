@@ -18,6 +18,7 @@ model User {
   accounts      Account[]
   roadmaps      Roadmap[]
   subtaskProgress RoadmapSubtaskProgress[]
+  testResults   TestResult[]
 
   @@map("user")
 }
@@ -100,6 +101,32 @@ model RoadmapSubtaskProgress {
   @@index([roadmapId])
   @@index([subtaskId])
   @@map("roadmap_subtask_progress")
+}
+
+model TestResult {
+  id               String   @id @default(cuid())
+  topic            String   @db.VarChar(500)
+  title            String   @db.VarChar(500)
+  difficulty       String   @db.VarChar(20)
+  totalQuestions   Int
+  correctCount     Int
+  incorrectCount   Int
+  unattemptedCount Int
+  scorePercentage  Int
+  totalTimeTaken   Float
+  strengths        String[]
+  weaknesses       String[]
+  recommendations  String[]
+  questionsJson    String   @db.Text
+  userAnswersJson  String   @db.Text
+  analysisJson     String   @db.Text
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("test_result")
 }
 
 model Session {
