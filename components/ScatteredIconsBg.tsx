@@ -62,7 +62,7 @@ function seededRandom(seed: number) {
   return x - Math.floor(x);
 }
 
-const ScatteredIcons: React.FC = () => {
+const ScatteredIconsBg: React.FC = () => {
   const items = useMemo(() => {
     const COLS = 10;
     const ROWS = 10;
@@ -110,4 +110,4 @@ const ScatteredIcons: React.FC = () => {
   );
 };
 
-export default ScatteredIcons;
+export default ScatteredIconsBg;

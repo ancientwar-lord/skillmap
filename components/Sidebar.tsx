@@ -8,8 +8,10 @@ import {
   Settings,
   ChevronLeft,
   LogIn,
-  GraduationCap,
+  Laptop,
   Map,
+  Brain,
+  GraduationCap,
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -29,7 +31,13 @@ export default function Sidebar({
       icon: <LayoutDashboard size={20} />,
       badge: '0',
     },
-    { name: 'Roadmap', href: '/roadmap', icon: <Map size={20} /> },
+    {
+      name: 'Planner',
+      href: '/planner',
+      icon: <Map size={20} />,
+    },
+    { name: 'Practice', href: '/practice', icon: <Brain size={20} /> },
+    { name: 'Apply', href: '/apply', icon: <Laptop size={20} /> },
     { name: 'Settings', href: '/user-settings', icon: <Settings size={20} /> },
   ];
 

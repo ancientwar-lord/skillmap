@@ -16,8 +16,88 @@ model User {
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
+  roadmaps      Roadmap[]
+  subtaskProgress RoadmapSubtaskProgress[]
 
   @@map("user")
+}
+
+model Roadmap {
+  id          String    @id @default(cuid())
+  title       String    @db.VarChar(255)
+  description String?   @db.VarChar(10000)
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  tasks       RoadmapTask[]
+  progress    RoadmapSubtaskProgress[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([authorId])
+  @@map("roadmap")
+}
+
+model RoadmapTask {
+  id            String    @id @default(cuid())
+  taskTitle     String    @db.VarChar(255)
+  taskNumber    Int
+  tag           String?   @db.VarChar(255)
+  ainotes       String?   @db.Text
+  roadmapId     String
+  roadmap       Roadmap   @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  subTasks      RoadmapSubTask[]
+  resources     RoadmapTaskResources?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([roadmapId])
+  @@map("roadmap_task")
+}
+
+model RoadmapSubTask {
+  id            String    @id @default(cuid())
+  subTaskTitle  String    @db.VarChar(500)
+  ainotes       String?   @db.VarChar(5000)
+  taskId        String
+  task          RoadmapTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  progress      RoadmapSubtaskProgress[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([taskId])
+  @@map("roadmap_subtask")
+}
+
+model RoadmapTaskResources {
+  id                      String    @id @default(cuid())
+  youtubeLinks             String[]
+  articles                String[]
+  selfstudyReferences       String[]
+  practiceLinks                String[]
+  taskId                  String    @unique
+  task                    RoadmapTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  @@map("roadmap_task_resources")
+}
+
+model RoadmapSubtaskProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roadmapId   String
+  roadmap     Roadmap   @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  subtaskId   String
+  subtask     RoadmapSubTask @relation(fields: [subtaskId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([userId, subtaskId])
+  @@index([userId])
+  @@index([roadmapId])
+  @@index([subtaskId])
+  @@map("roadmap_subtask_progress")
 }
 
 model Session {
