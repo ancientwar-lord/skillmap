@@ -43,7 +43,7 @@ export const getZodErrorMessage = (error: z.ZodError): string => {
 
 export const roadmapSubTaskSchema = z.object({
   subTaskTitle: z.string().min(1).max(500),
-  ainotes: z.string().max(5000).default(''),
+  ainotes: z.string().max(5000).optional(),
 });
 
 export const roadmapTaskResourcesSchema = z.object({
@@ -57,7 +57,7 @@ export const roadmapTaskSchema = z.object({
   taskTitle: z.string().min(1).max(255),
   taskNumber: z.number().int().min(1),
   tag: z.string().max(255).default(''),
-  ainotes: z.string().max(10000).default(''),
+  ainotes: z.string().max(10000).optional(),
   subTasks: z.array(roadmapSubTaskSchema).min(1),
   resources: roadmapTaskResourcesSchema.optional().default({
     youtubeLinks: [],

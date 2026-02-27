@@ -7,7 +7,6 @@ import {
   createRoadmapPromptSchema,
   getZodErrorMessage,
 } from '@/lib/zod/schema';
-import { z } from 'zod';
 
 const POLLINATIONS_URL = 'https://gen.pollinations.ai/v1/chat/completions';
 const POLLINATIONS_API_KEY = process.env.POLLINATIONS_AI_API_KEY;
@@ -30,41 +29,50 @@ export async function POST(request: NextRequest) {
     // Generate roadmap using Pollinations AI
     const aiPrompt = `You are a learning roadmap generator. Create a detailed, structured learning roadmap based on the user's request.
 
-User request: "${prompt}"
+    User request: "${prompt}"
 
-You MUST respond with ONLY valid JSON (no markdown, no explanation, no code fences). Use this exact structure:
-{
-  "title": "Roadmap title (max 200 chars)",
-  "description": "A comprehensive description of the roadmap goals and what the learner will achieve (max 500 chars)",
-  "tasks": [
+    You MUST respond with ONLY valid JSON (no markdown, no explanation, no code fences). Use this exact structure:
     {
-      "taskTitle": "Task title",
-      "taskNumber": 1,
-      "tag": "Category tag like Fundamentals, Advanced, etc.",
-      "ainotes": "Detailed AI notes explaining what this task covers, why it's important, key concepts, and how to approach learning it. Be thorough and helpful.",
-      "subTasks": [
+      "title": "Roadmap title (max 200 chars)",
+      "description": "A comprehensive description of the roadmap goals and what the learner will achieve (max 500 chars)",
+      "tasks": [
         {
-          "subTaskTitle": "Specific subtask to complete",
-          "ainotes": "Brief notes on how to complete this subtask"
+          "taskTitle": "Task title",
+          "taskNumber": 1,
+          "tag": "Category tag like Fundamentals, Intermediate, Advanced, etc.",
+          "subTasks": [
+            {
+              "subTaskTitle": "Specific subtask to complete"
+            }
+          ],
+          "resources": {
+            "youtubeLinks": ["https://youtube.com/watch?v=example"],
+            "articles": ["https://example.com/article"],
+            "selfstudyReferences": ["https://example.com/reference"],
+            "practiceLinks": ["https://example.com/practice"]
+          }
         }
-      ],
-      "resources": {
-        "youtubeLinks": ["https://youtube.com/watch?v=example"],
-        "articles": ["https://example.com/article"],
-        "selfstudyReferences": ["https://example.com/reference"],
-        "practiceLinks": ["https://example.com/practice"]
-      }
+      ]
     }
-  ]
-}
 
-Requirements:
-- Create 5-10 tasks ordered logically from beginner to advanced
-- Each task should have 3-6 subtasks
-- Provide REAL, working resource URLs (not example.com)
-- Include thorough ainotes for each task with practical learning advice
-- Tags should categorize the difficulty/topic area
-- Task numbers should be sequential starting from 1`;
+    Requirements:
+    - Create 5-10 tasks ordered logically from beginner to advanced.
+    - Each task must have 3-6 subtasks.
+    - Task numbers must be sequential starting from 1.
+    - Provide REAL, working URLs only (no placeholder domains like example.com).
+    - Do NOT repeat the same resource across tasks.
+    - Tags should categorize the difficulty or topic area.
+
+    YouTube Resource Rules (IMPORTANT):
+    - Provide 1-3 YouTube links for EACH task.
+    - Each YouTube video MUST be directly related to that specific task topic (not general or unrelated videos).
+    - Prefer high-quality educational channels (official docs channels, well-known educators, or long-form tutorials).
+    - Prefer videos that clearly teach the exact subskills listed in the subtasks.
+    - Avoid unrelated compilations or motivational videos.
+    - Use full YouTube watch URLs only (https://www.youtube.com/watch?v=...).
+
+    Return ONLY valid JSON.
+    `;
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -159,11 +167,11 @@ Requirements:
             taskTitle: task.taskTitle.slice(0, 255),
             taskNumber: task.taskNumber,
             tag: task.tag?.slice(0, 255) || null,
-            ainotes: task.ainotes || null,
+            ainotes: null,
             subTasks: {
               create: (task.subTasks || []).map((sub: RoadmapSubTask) => ({
                 subTaskTitle: sub.subTaskTitle.slice(0, 500),
-                ainotes: sub.ainotes?.slice(0, 5000) || null,
+                ainotes: null,
               })),
             },
             resources: task.resources

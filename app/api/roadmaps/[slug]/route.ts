@@ -55,6 +55,7 @@ export async function GET(
         id: roadmap.id,
         title: roadmap.title,
         description: roadmap.description,
+        notes: roadmap.notes,
         createdAt: roadmap.createdAt,
       },
       roadmapData,

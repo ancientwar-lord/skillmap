@@ -32,12 +32,12 @@ export default function Sidebar({
       badge: '0',
     },
     {
-      name: 'Planner',
+      name: 'Study Planner',
       href: '/planner',
       icon: <Map size={20} />,
     },
-    { name: 'Practice', href: '/practice', icon: <Brain size={20} /> },
-    { name: 'Apply', href: '/apply', icon: <Laptop size={20} /> },
+    { name: 'Practice Skills', href: '/practice', icon: <Brain size={20} /> },
+    { name: 'Apply Skills', href: '/apply', icon: <Laptop size={20} /> },
     { name: 'Settings', href: '/user-settings', icon: <Settings size={20} /> },
   ];
 

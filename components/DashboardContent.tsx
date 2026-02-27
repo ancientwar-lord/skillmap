@@ -25,6 +25,7 @@ interface RoadmapSummary {
   id: string;
   title: string;
   description: string | null;
+  isPinned: boolean;
   taskCount: number;
   subtaskCount: number;
   completedSubtasks: number;
@@ -117,18 +118,17 @@ export default function DashboardContent({
   useEffect(() => {
     async function fetchRoadmaps() {
       try {
-        const res = await fetch('/api/roadmaps');
+        const res = await fetch('/api/roadmaps', { cache: 'no-store' });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to fetch');
         setRoadmaps(data.roadmaps);
         setTodos(buildTodosFromRoadmaps(data.roadmaps));
-        if (data.roadmaps.length > 0) {
-          const autoPin = new Set<string>();
-          data.roadmaps
-            .slice(0, Math.min(2, data.roadmaps.length))
-            .forEach((r: RoadmapSummary) => autoPin.add(r.id));
-          setPinnedIds(autoPin);
-        }
+        // Initialize pinned state from DB
+        const dbPinned = new Set<string>();
+        data.roadmaps.forEach((r: RoadmapSummary) => {
+          if (r.isPinned) dbPinned.add(r.id);
+        });
+        setPinnedIds(dbPinned);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Something went wrong');
       } finally {
@@ -143,13 +143,45 @@ export default function DashboardContent({
     .filter((r) => !pinnedIds.has(r.id))
     .slice(0, 4);
 
-  const togglePin = (id: string) => {
+  const togglePin = async (id: string) => {
+    // Optimistic update
     setPinnedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+
+    try {
+      const res = await fetch('/api/roadmaps/toggle-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roadmapId: id }),
+      });
+      if (!res.ok) {
+        // Revert on failure
+        setPinnedIds((prev) => {
+          const next = new Set(prev);
+          if (next.has(id)) next.delete(id);
+          else next.add(id);
+          return next;
+        });
+      } else {
+        const data = await res.json();
+        // Sync roadmaps state with confirmed DB value
+        setRoadmaps((prev) =>
+          prev.map((r) => (r.id === id ? { ...r, isPinned: data.isPinned } : r))
+        );
+      }
+    } catch {
+      // Revert on error
+      setPinnedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        return next;
+      });
+    }
   };
 
   const toggleTodo = (id: string) => {
@@ -208,7 +240,7 @@ export default function DashboardContent({
             <div className="flex items-center gap-2">
               <Target className="w-5 h-5 text-purple-700" />
               <h2 className="text-lg font-semibold text-purple-900">
-                Your Locked Target Ground
+                Your Locked Targets
               </h2>
             </div>
             <p className="text-xs text-purple-500 mt-1">

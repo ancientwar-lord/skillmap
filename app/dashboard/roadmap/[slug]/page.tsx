@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import Roadmap from '@/components/Roadmap';
@@ -26,6 +26,7 @@ interface RoadmapInfo {
   id: string;
   title: string;
   description: string | null;
+  notes: string | null;
   createdAt: string;
 }
 
@@ -104,6 +105,27 @@ export default function DashboardRoadmapDetailPage({
     }
   };
 
+  const handleAiNotesUpdate = useCallback(
+    (type: 'task' | 'subtask', id: string, notes: string) => {
+      setRoadmapData((prev) =>
+        prev.map((task) => {
+          if (type === 'task' && task.taskId === id) {
+            return { ...task, ainotes: notes };
+          }
+          return {
+            ...task,
+            subtasks: task.subtasks.map((sub) =>
+              type === 'subtask' && sub.$id === id
+                ? { ...sub, ainotes: notes }
+                : sub
+            ),
+          };
+        })
+      );
+    },
+    []
+  );
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
@@ -138,7 +160,10 @@ export default function DashboardRoadmapDetailPage({
           title={roadmapInfo.title}
           description={roadmapInfo.description || undefined}
           roadmapData={roadmapData}
+          roadmapId={roadmapInfo.id}
+          initialNotes={roadmapInfo.notes}
           onToggleSubtask={handleToggleSubtask}
+          onAiNotesUpdate={handleAiNotesUpdate}
         />
       </div>
     </div>

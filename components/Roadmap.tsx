@@ -16,6 +16,7 @@ import {
   BookOpen,
   ExternalLink,
   Dumbbell,
+  Sparkles,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -24,11 +25,14 @@ import {
 } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import Watercomponent from './WaterProgress';
+import AIResponseOverlay from './AIResponseOverlay';
+import RoadmapNotes from '@/components/RoadmapNotes';
 
 interface SubTask {
   $id: string;
   title: string;
   completed: boolean;
+  ainotes?: string | null;
 }
 
 interface TaskResources {
@@ -42,6 +46,7 @@ interface RoadmapTask {
   taskId: string;
   title: string;
   tag?: string;
+  ainotes?: string | null;
   resources?: TaskResources | null;
   subtasks: SubTask[];
 }
@@ -50,16 +55,117 @@ interface RoadmapProps {
   title: string;
   description?: string;
   roadmapData: RoadmapTask[];
+  roadmapId: string;
+  initialNotes?: string | null;
   onToggleSubtask?: (subtaskId: string) => void;
+  onAiNotesUpdate?: (
+    type: 'task' | 'subtask',
+    id: string,
+    notes: string
+  ) => void;
 }
 
 const Roadmap: React.FC<RoadmapProps> = ({
   title,
   description,
   roadmapData = [],
+  roadmapId,
+  initialNotes,
   onToggleSubtask,
+  onAiNotesUpdate,
 }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [aiOverlay, setAiOverlay] = useState({
+    isOpen: false,
+    response: '',
+    isLoading: false,
+    title: '',
+    chatKey: '',
+    context: undefined as
+      | { type: 'task' | 'subtask'; taskTitle: string; subtaskTitle?: string }
+      | undefined,
+  });
+
+  const handleAiExplain = async (
+    type: 'task' | 'subtask',
+    id: string,
+    taskTitle: string,
+    subtaskTitle?: string,
+    existingNotes?: string | null,
+    subtaskTitles?: string[]
+  ) => {
+    const chatKey = `${type}-${id}`;
+    const contextInfo = { type, taskTitle, subtaskTitle };
+
+    // If AI notes already exist, show them immediately
+    if (existingNotes) {
+      setAiOverlay({
+        isOpen: true,
+        response: existingNotes,
+        isLoading: false,
+        title: subtaskTitle || taskTitle,
+        chatKey,
+        context: contextInfo,
+      });
+      return;
+    }
+    setAiOverlay({
+      isOpen: true,
+      response: '',
+      isLoading: true,
+      title: subtaskTitle || taskTitle,
+      chatKey,
+      context: contextInfo,
+    });
+
+    try {
+      const res = await fetch('/api/roadmaps/ai-explain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type,
+          id,
+          taskTitle,
+          subtaskTitle,
+          subtasks: subtaskTitles,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        const errorDetail = data.error || `Server error (${res.status})`;
+        setAiOverlay((prev) => ({
+          ...prev,
+          isLoading: false,
+          response: `⚠️ **Failed to generate explanation**\n\n${errorDetail}\n\nPlease try again later.`,
+        }));
+        return;
+      }
+
+      // Show response instantly
+      setAiOverlay((prev) => ({
+        ...prev,
+        isLoading: false,
+        response: data.ainotes,
+      }));
+
+      // Update parent state (DB save already happened in the API route)
+      onAiNotesUpdate?.(type, id, data.ainotes);
+    } catch (err) {
+      const errorDetail =
+        err instanceof Error && err.message === 'Failed to fetch'
+          ? 'Network error — check your internet connection and try again.'
+          : err instanceof Error
+            ? err.message
+            : 'An unexpected error occurred.';
+      setAiOverlay((prev) => ({
+        ...prev,
+        isLoading: false,
+        response: `⚠️ **Something went wrong**\n\n${errorDetail}`,
+      }));
+    }
+  };
 
   const allSubtasks = roadmapData.flatMap((t) => t.subtasks || []);
   const totalSub = allSubtasks.length;
@@ -69,12 +175,21 @@ const Roadmap: React.FC<RoadmapProps> = ({
 
   return (
     <div className="min-h-screen  py-12 px-4 overflow-hidden font-sans ">
+      <AIResponseOverlay
+        isOpen={aiOverlay.isOpen}
+        onClose={() => setAiOverlay((prev) => ({ ...prev, isOpen: false }))}
+        response={aiOverlay.response}
+        isLoading={aiOverlay.isLoading}
+        title={aiOverlay.title}
+        chatKey={aiOverlay.chatKey}
+        context={aiOverlay.context}
+      />
       <div className="max-w-4xl mx-auto bg-sky-50 p-4 rounded-4xl">
         <header className="sticky top-4 z-40 mb-1">
           <div className="relative w-full bg-slate-200 rounded-full overflow-hidden">
             <div className="text-center mb-6">
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-3">
-                <span className="bg-clip-text text-transparent bg-linear-to-r from-gray-900 via-blue-800 to-gray-900">
+              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-3 ">
+                <span className="bg-clip-text text-transparent bg-linear-to-r from-gray-900 via-blue-800 to-gray-900 px-20">
                   {title}
                 </span>
               </h1>
@@ -96,7 +211,7 @@ const Roadmap: React.FC<RoadmapProps> = ({
             </span>
           </div>
         </header>
-        <div className="relative pt-10 pb-32">
+        <div className="relative pt-10 pb-30">
           <div className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2">
             <div className="w-px h-full border-l-2 border-dashed border-indigo-800" />
           </div>
@@ -110,8 +225,13 @@ const Roadmap: React.FC<RoadmapProps> = ({
                 setExpandedId(expandedId === task.taskId ? null : task.taskId)
               }
               onToggleSubtask={onToggleSubtask}
+              onAiExplain={handleAiExplain}
             />
           ))}
+        </div>
+        <div className="max-w-4xl mx-auto">
+          {' '}
+          <RoadmapNotes roadmapId={roadmapId} initialNotes={initialNotes} />
         </div>
       </div>
     </div>
@@ -123,39 +243,123 @@ export default Roadmap;
 const SubtaskList = ({
   task,
   onToggleSubtask,
+  onAiExplain,
 }: {
   task: RoadmapTask;
   onToggleSubtask?: (subtaskId: string) => void;
+  onAiExplain?: (
+    type: 'task' | 'subtask',
+    id: string,
+    taskTitle: string,
+    subtaskTitle?: string,
+    existingNotes?: string | null,
+    subtaskTitles?: string[]
+  ) => void;
 }) => {
   return (
     <div className="mt-6 w-full max-w-md mx-auto bg-gray-50 rounded-xl border border-gray-200 overflow-hidden shadow-sm transition-all duration-300 animate-in fade-in slide-in-from-top-4">
+      {/* Task-level AI tag button */}
+      {task.tag && (
+        <button
+          className="flex items-center gap-1 bg-purple-100 hover:bg-purple-200 transition-colors duration-200 cursor-pointer rounded-br-lg px-2.5 py-1"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAiExplain?.(
+              'task',
+              task.taskId,
+              task.title,
+              undefined,
+              task.ainotes,
+              task.subtasks.map((s) => s.title)
+            );
+          }}
+          aria-label={`Get AI explanation for ${task.tag}`}
+        >
+          <span className="text-[10px] font-semibold text-purple-800 uppercase">
+            {task.tag}
+          </span>
+          <span className="text-[10px] text-purple-500 font-medium">AI</span>
+          <Sparkles className="w-3 h-3 text-purple-500" />
+        </button>
+      )}
+
       <div className="p-4 space-y-2">
         {task.subtasks.map((sub) => (
           <div
             key={sub.$id}
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleSubtask?.(sub.$id);
-            }}
-            className={`flex items-center gap-3 p-3 rounded-lg border transition-colors duration-200 cursor-pointer hover:shadow-sm
+            className={`flex items-center gap-3 p-3 rounded-lg border transition-colors duration-200 hover:shadow-sm
               ${
                 sub.completed
                   ? 'bg-emerald-50 border-emerald-100'
                   : 'bg-white border-gray-100'
               }`}
           >
-            {sub.completed ? (
-              <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />
-            ) : (
-              <Circle size={18} className="text-gray-700 shrink-0" />
-            )}
-            <span
-              className={`text-sm font-medium ${
-                sub.completed ? 'text-gray-500 line-through' : 'text-gray-700'
-              }`}
+            {/* Checkbox area */}
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSubtask?.(sub.$id);
+              }}
+              className="flex items-center gap-3 flex-1 cursor-pointer min-w-0"
             >
-              {sub.title}
-            </span>
+              {sub.completed ? (
+                <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />
+              ) : (
+                <Circle size={18} className="text-gray-700 shrink-0" />
+              )}
+              <span
+                className={`text-sm font-medium truncate ${
+                  sub.completed ? 'text-gray-500 line-through' : 'text-gray-700'
+                }`}
+              >
+                {sub.title}
+              </span>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-2 shrink-0">
+              {/* YouTube search */}
+              <a
+                href={`https://www.youtube.com/results?search_query=${encodeURIComponent(
+                  sub.title + ' ' + task.title
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="p-1 text-gray-400 hover:text-red-500 transition-colors duration-200"
+                aria-label="Search on YouTube"
+                title="Search on YouTube"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.196-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+                </svg>
+              </a>
+
+              {/* AI explain */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAiExplain?.(
+                    'subtask',
+                    sub.$id,
+                    task.title,
+                    sub.title,
+                    sub.ainotes
+                  );
+                }}
+                className="flex items-center gap-0.5 p-1 text-gray-400 hover:text-purple-600 transition-colors duration-200 cursor-pointer"
+                aria-label={`Get AI explanation for ${sub.title}`}
+                title="AI Explanation"
+              >
+                <span className="text-[10px] font-medium opacity-70">AI</span>
+                <Sparkles className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -169,12 +373,21 @@ const RoadmapNode = ({
   isExpanded,
   onToggle,
   onToggleSubtask,
+  onAiExplain,
 }: {
   task: RoadmapTask;
   index: number;
   isExpanded: boolean;
   onToggle: () => void;
   onToggleSubtask?: (subtaskId: string) => void;
+  onAiExplain?: (
+    type: 'task' | 'subtask',
+    id: string,
+    taskTitle: string,
+    subtaskTitle?: string,
+    existingNotes?: string | null,
+    subtaskTitles?: string[]
+  ) => void;
 }) => {
   const [offset, setOffset] = useState(0);
   const [showResources, setShowResources] = useState(false);
@@ -311,7 +524,11 @@ const RoadmapNode = ({
       </div>
 
       {isExpanded && (
-        <SubtaskList task={task} onToggleSubtask={onToggleSubtask} />
+        <SubtaskList
+          task={task}
+          onToggleSubtask={onToggleSubtask}
+          onAiExplain={onAiExplain}
+        />
       )}
 
       {typeof document !== 'undefined' &&

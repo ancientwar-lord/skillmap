@@ -41,6 +41,7 @@ export async function GET() {
         id: roadmap.id,
         title: roadmap.title,
         description: roadmap.description,
+        isPinned: roadmap.isPinned,
         taskCount: roadmap.tasks.length,
         subtaskCount: totalSubtasks,
         completedSubtasks,
@@ -50,7 +51,12 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({ roadmaps: roadmapsWithProgress });
+    return NextResponse.json(
+      { roadmaps: roadmapsWithProgress },
+      {
+        headers: { 'Cache-Control': 'no-store, max-age=0' },
+      }
+    );
   } catch (error) {
     console.error('Error fetching roadmaps:', error);
     return NextResponse.json(
