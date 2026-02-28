@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import TodoOverlay from './TodoOverlay';
 import { Check, Trash2, Plus } from 'lucide-react';
 
 function formatHumanDate(iso: string) {
@@ -37,6 +38,7 @@ export type Todo = {
   id: string;
   text: string;
   completed: boolean;
+  createdAt: string;
 };
 const categories = [
   'DAILY',
@@ -141,6 +143,7 @@ export default function GoalSettings() {
   });
 
   const [dateTodos, setDateTodos] = useState<Record<string, Todo[]>>({});
+  const [showTodoOverlay, setShowTodoOverlay] = useState(false);
 
   const categoryOptions = [
     { label: `Todos (${todayLabel})`, value: 'ROUTINE' },
@@ -206,8 +209,19 @@ export default function GoalSettings() {
     fetch('/api/todos')
       .then((r) => r.json())
       .then((list: Todo[]) => {
+        const today = new Date();
+        const todayTodos = list.filter((t) => {
+          const d = new Date(t.createdAt);
+          return (
+            d.getFullYear() === today.getFullYear() &&
+            d.getMonth() === today.getMonth() &&
+            d.getDate() === today.getDate()
+          );
+        });
         const grouped: Record<string, Todo[]> = {};
-        grouped[todayLabel] = list;
+        if (todayTodos.length) {
+          grouped[todayLabel] = todayTodos;
+        }
         setDateTodos(grouped);
       });
   }, [todayLabel]);
@@ -295,6 +309,7 @@ export default function GoalSettings() {
             onToggle={(id, completed) => updateTodoRemote(id, { completed })}
             onDelete={(id) => deleteTodoRemote(id)}
             headerRight={headerControls}
+            onShowAll={() => setShowTodoOverlay(true)}
           />
         ) : (
           <ModernCategoryCard
@@ -334,8 +349,11 @@ export default function GoalSettings() {
           />
         )}
       </div>
-
       <GoalsOverview />
+      <TodoOverlay
+        show={showTodoOverlay}
+        onClose={() => setShowTodoOverlay(false)}
+      />
     </div>
   );
 }
@@ -347,6 +365,7 @@ function ModernTodoCard({
   onDelete,
   onAdd,
   headerRight,
+  onShowAll,
 }: {
   title: string;
   todos: Todo[];
@@ -354,6 +373,7 @@ function ModernTodoCard({
   onDelete: (id: string) => void;
   onAdd: (text: string) => Promise<void>;
   headerRight?: React.ReactNode;
+  onShowAll?: () => void;
 }) {
   const [input, setInput] = useState('');
 
@@ -367,6 +387,14 @@ function ModernTodoCard({
     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">{title}</h2>
+        {onShowAll && (
+          <button
+            onClick={onShowAll}
+            className="text-sm text-indigo-600 hover:underline"
+          >
+            Show previous todos
+          </button>
+        )}
         {headerRight}
       </div>
 

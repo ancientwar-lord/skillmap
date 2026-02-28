@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { RoadmapSummary, Todo, GoalItem } from '../lib/types';
+import { isTodayDate } from '../lib/dashboardUtils';
 
 import PinnedTargets from './PinnedTargets';
 import TodoSection from './TodoSection';
+import TodoOverlay from './TodoOverlay';
 import GoalsSection from './GoalsSection';
 import ArchivedRoadmaps from './ArchivedRoadmaps';
 import RoadmapOverlay from './RoadmapOverlay';
@@ -24,12 +26,9 @@ export default function DashboardContent({
   const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set());
   const [showOverlay, setShowOverlay] = useState(false);
   const [showGoalsOverlay, setShowGoalsOverlay] = useState(false);
+  const [showTodoOverlay, setShowTodoOverlay] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-
-  // routine todos fetched from /api/todos
   const [routineTodos, setRoutineTodos] = useState<Todo[]>([]);
-
-  // goal items fetched from database
   const [goals, setGoals] = useState<GoalItem[]>([]);
 
   useEffect(() => {
@@ -39,15 +38,15 @@ export default function DashboardContent({
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to fetch');
         setRoadmaps(data.roadmaps);
-        // load routine todos as well
         fetch('/api/todos')
           .then((r) => r.json())
-          .then((list: Todo[]) => setRoutineTodos(list));
-        // load all goal items
+          .then((list: Todo[]) => {
+            const todayList = list.filter((t) => isTodayDate(t.createdAt));
+            setRoutineTodos(todayList);
+          });
         fetch('/api/goals/items')
           .then((r) => r.json())
           .then((data) => setGoals(data.items || []));
-        // Initialize pinned state from DB
         const dbPinned = new Set<string>();
         data.roadmaps.forEach((r: RoadmapSummary) => {
           if (r.isPinned) dbPinned.add(r.id);
@@ -64,14 +63,12 @@ export default function DashboardContent({
 
   const pinnedRoadmaps = roadmaps.filter((r) => pinnedIds.has(r.id));
   const pinnedGoals = goals.filter((g) => g.isPinned);
-  // only show unpinned goals in the "Your Goals" list
   const visibleGoals = goals.filter((g) => !g.isPinned);
   const archivedRoadmaps = roadmaps
     .filter((r) => !pinnedIds.has(r.id))
     .slice(0, 4);
 
   const togglePin = async (id: string) => {
-    // Optimistic update
     setPinnedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -86,7 +83,6 @@ export default function DashboardContent({
         body: JSON.stringify({ roadmapId: id }),
       });
       if (!res.ok) {
-        // Revert on failure
         setPinnedIds((prev) => {
           const next = new Set(prev);
           if (next.has(id)) next.delete(id);
@@ -95,13 +91,11 @@ export default function DashboardContent({
         });
       } else {
         const data = await res.json();
-        // Sync roadmaps state with confirmed DB value
         setRoadmaps((prev) =>
           prev.map((r) => (r.id === id ? { ...r, isPinned: data.isPinned } : r))
         );
       }
     } catch {
-      // Revert on error
       setPinnedIds((prev) => {
         const next = new Set(prev);
         if (next.has(id)) next.delete(id);
@@ -112,7 +106,6 @@ export default function DashboardContent({
   };
 
   const toggleGoalPin = async (id: string) => {
-    // optimistic
     setGoals((prev) =>
       prev.map((g) => (g.id === id ? { ...g, isPinned: !g.isPinned } : g))
     );
@@ -123,13 +116,11 @@ export default function DashboardContent({
         body: JSON.stringify({ goalId: id }),
       });
       if (!res.ok) throw new Error('toggle failed');
-      // optionally refresh goals list to pick up any other changes
       const data = await res.json();
       setGoals((prev) =>
         prev.map((g) => (g.id === id ? { ...g, isPinned: data.isPinned } : g))
       );
     } catch {
-      // revert
       setGoals((prev) =>
         prev.map((g) => (g.id === id ? { ...g, isPinned: !g.isPinned } : g))
       );
@@ -154,12 +145,10 @@ export default function DashboardContent({
   };
 
   const deleteRoutine = async (id: string) => {
-    // optimistic removal
     setRoutineTodos((prev) => prev.filter((t) => t.id !== id));
     try {
       await fetch(`/api/todos/${id}`, { method: 'DELETE' });
     } catch {
-      // if failure we could reload but ignore for now
     }
   };
 
@@ -181,6 +170,10 @@ export default function DashboardContent({
 
   const openGoalsOverlay = () => {
     setShowGoalsOverlay(true);
+  };
+
+  const openTodoOverlay = () => {
+    setShowTodoOverlay(true);
   };
 
   if (loading) {
@@ -230,6 +223,7 @@ export default function DashboardContent({
           onToggle={toggleRoutine}
           onAdd={addRoutine}
           onDelete={deleteRoutine}
+          onShowAll={openTodoOverlay}
         />
       </div>
 
@@ -245,6 +239,11 @@ export default function DashboardContent({
         openRoadmap={openRoadmap}
         togglePin={togglePin}
         setShowOverlay={setShowOverlay}
+      />
+
+      <TodoOverlay
+        show={showTodoOverlay}
+        onClose={() => setShowTodoOverlay(false)}
       />
 
       <GoalsOverlay

@@ -7,6 +7,7 @@ interface Props {
   onToggle: (id: string) => void;
   onAdd: (text: string) => void;
   onDelete: (id: string) => void;
+  onShowAll?: () => void;
 }
 
 export default function TodoSection({
@@ -14,13 +15,22 @@ export default function TodoSection({
   onToggle,
   onAdd,
   onDelete,
+  onShowAll,
 }: Props) {
   const [input, setInput] = useState('');
 
   return (
     <section className="lg:col-span-1 bg-white rounded-2xl border border-blue-200/60 shadow-sm shadow-blue-100/40 overflow-hidden flex flex-col">
-      <div className="px-5 py-4 border-b border-slate-100">
+      <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
         <h2 className="text-lg font-semibold">Today`s Todos</h2>
+        {onShowAll && (
+          <button
+            onClick={onShowAll}
+            className="text-sm text-indigo-600 hover:underline"
+          >
+            Show previous todos
+          </button>
+        )}
       </div>
       {/* scrolling list */}
       <div className="p-4 space-y-2 flex-1 overflow-y-auto">

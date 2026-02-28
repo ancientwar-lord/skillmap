@@ -2,12 +2,30 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { verifySession } from '@/lib/dal';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await verifySession();
 
+    const url = new URL(req.url);
+    const all = url.searchParams.get('all') === 'true';
+
+    let whereClause: any = { userId: session.userId };
+    if (!all) {
+      const now = new Date();
+      const startOfDay = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+      );
+      const startOfTomorrow = new Date(
+        startOfDay.getTime() + 24 * 60 * 60 * 1000
+      );
+      whereClause.createdAt = {
+        gte: startOfDay,
+        lt: startOfTomorrow,
+      };
+    }
+
     const todos = await db.routineTodo.findMany({
-      where: { userId: session.userId },
+      where: whereClause,
       orderBy: { createdAt: 'desc' },
     });
 
