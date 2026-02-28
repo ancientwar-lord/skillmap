@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth/context';
 import {
   LayoutDashboard,
-  Settings,
+  Goal,
   ChevronLeft,
   LogIn,
   Laptop,
@@ -38,7 +38,7 @@ export default function Sidebar({
     },
     { name: 'Practice Skills', href: '/practice', icon: <Brain size={20} /> },
     { name: 'Apply Skills', href: '/apply', icon: <Laptop size={20} /> },
-    { name: 'Settings', href: '/user-settings', icon: <Settings size={20} /> },
+    { name: 'Goal Settings', href: '/goal-settings', icon: <Goal size={20} /> },
   ];
 
   return (

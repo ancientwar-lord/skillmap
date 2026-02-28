@@ -67,3 +67,41 @@ export interface AIEvaluation {
     explanation: string;
   }[];
 }
+
+// ── Dashboard Types ──
+export interface RoadmapSummary {
+  id: string;
+  title: string;
+  description: string | null;
+  isPinned: boolean;
+  taskCount: number;
+  subtaskCount: number;
+  completedSubtasks: number;
+  progress: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TodoItem {
+  id: string;
+  title: string;
+  date: string;
+  completed: boolean;
+  roadmapSlug?: string;
+}
+
+export interface Todo {
+  id: string;
+  text: string;
+  completed: boolean;
+  createdAt: string;
+}
+
+export interface GoalItem {
+  id: string;
+  text: string;
+  completed: boolean;
+  targetDate?: string | null;
+  isPinned: boolean;
+  category?: string | null;
+}
