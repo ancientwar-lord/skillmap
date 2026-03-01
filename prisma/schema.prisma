@@ -22,6 +22,8 @@ model User {
   routineTodos  RoutineTodo[]
   goalSections  GoalSection[]
   goalItems     GoalItem[]
+  skillEmbedding  Float[]
+  recommendedJobs RecommendedJob[]
 
   @@map("user")
 }
@@ -246,3 +248,30 @@ model GoalItem {
   @@index([userId])
   @@map("goal_item")
 }
+
+model Job {
+  id          String   @id @default(cuid())
+  title       String
+  link        String
+  description String
+  embedding   Float[]
+  recommendedFor RecommendedJob[]
+}
+
+model RecommendedJob {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  score     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, jobId])
+  @@index([userId, score])
+  @@index([userId])
+  @@index([jobId])
+}
+
+
