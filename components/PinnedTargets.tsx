@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { PinOff, MapPin, ListTodo, CheckCircle2, Target } from 'lucide-react';
 import ProgressBar from './ProgressBar';
 import { RoadmapSummary, GoalItem } from '../lib/types';
-import { formatDate, slugify } from '../lib/dashboardUtils';
+import { formatDate, slugify } from '@/lib/utils';
 
 interface Props {
   roadmaps: RoadmapSummary[];

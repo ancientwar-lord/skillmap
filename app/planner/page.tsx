@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { slugify } from '@/lib/utils';
 import {
   Sparkles,
   Loader2,
@@ -25,15 +26,6 @@ interface RoadmapSummary {
   updatedAt: string;
 }
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
 
 export default function PlannerPage() {
   const router = useRouter();

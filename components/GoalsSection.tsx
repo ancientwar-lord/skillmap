@@ -1,6 +1,6 @@
 import { Pin, PinOff, ClipboardList, Eye } from 'lucide-react';
 import { GoalItem } from '../lib/types';
-import { formatDate } from '../lib/dashboardUtils';
+import { formatDate } from '../lib/utils';
 
 interface Props {
   goals: GoalItem[];

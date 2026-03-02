@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Pin, PinOff, ListTodo, CheckCircle2 } from 'lucide-react';
 import { RoadmapSummary } from '../lib/types';
-import { slugify } from '../lib/dashboardUtils';
+import { slugify } from '@/lib/utils';
 import ProgressBar from './ProgressBar';
 
 interface Props {

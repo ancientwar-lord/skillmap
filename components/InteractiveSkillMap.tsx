@@ -156,7 +156,9 @@ export default function InteractiveSkillMap() {
                   <div
                     className={`flex items-center gap-3 ${step.bg} border ${step.border} p-3 rounded-xl shadow-xl backdrop-blur-md min-w-55`}
                   >
-                    <div className={`${step.iconBg} p-2 rounded-lg ${step.iconText}`}>
+                    <div
+                      className={`${step.iconBg} p-2 rounded-lg ${step.iconText}`}
+                    >
                       <ContentIcon size={18} />
                     </div>
                     <div className="flex flex-col gap-0.5">

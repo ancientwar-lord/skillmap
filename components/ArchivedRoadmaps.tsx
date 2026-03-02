@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Archive, Eye, ListTodo, CheckCircle2, Pin } from 'lucide-react';
 import ProgressBar from './ProgressBar';
 import { RoadmapSummary } from '../lib/types';
-import { formatDate, slugify } from '../lib/dashboardUtils';
+import { formatDate, slugify } from '@/lib/utils';
 
 interface Props {
   archivedRoadmaps: RoadmapSummary[];

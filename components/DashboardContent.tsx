@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { RoadmapSummary, Todo, GoalItem } from '../lib/types';
-import { isTodayDate } from '../lib/dashboardUtils';
+import { isTodayDate } from '../lib/utils';
 
 import PinnedTargets from './PinnedTargets';
 import TodoSection from './TodoSection';
@@ -148,8 +148,7 @@ export default function DashboardContent({
     setRoutineTodos((prev) => prev.filter((t) => t.id !== id));
     try {
       await fetch(`/api/todos/${id}`, { method: 'DELETE' });
-    } catch {
-    }
+    } catch {}
   };
 
   const addRoutine = async (text: string) => {
