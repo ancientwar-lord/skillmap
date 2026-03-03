@@ -19,7 +19,7 @@ export default function ArchivedRoadmaps({
 }: Props) {
   return (
     <section className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden mt-6">
-      <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-gray-50">
+      <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-sky-50/60">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Archive className="w-5 h-5 text-slate-600" />

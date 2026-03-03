@@ -20,15 +20,18 @@ export default function PinnedTargets({
   openRoadmap,
 }: Props) {
   return (
-    <section className="lg:col-span-2 bg-white rounded-2xl border border-purple-200/60 shadow-sm shadow-purple-100/40 overflow-hidden">
-      <div className="px-5 py-4 border-b border-purple-100 bg-gradient-to-r from-purple-50 to-violet-50/60">
-        <div className="flex items-center gap-2">
-          <Target className="w-5 h-5 text-purple-700" />
-          <h2 className="text-lg font-semibold text-purple-900">
-            Your Locked Targets
-          </h2>
+    <section className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+      <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-sky-50/60">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Target className="w-5 h-5 text-purple-700" />
+            <h2 className="text-lg font-semibold text-slate-800">
+              Your Locked Targets
+            </h2>
+          </div>
+          {/* header spacing only; nothing to show on right */}
         </div>
-        <p className="text-xs text-purple-500 mt-1">
+        <p className="text-xs text-slate-400 mt-1">
           Pinned roadmaps & goals you`re focused on
         </p>
       </div>
@@ -50,7 +53,7 @@ export default function PinnedTargets({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="group relative p-4 rounded-xl border border-purple-100 hover:border-purple-300 bg-gradient-to-br from-white to-purple-50/40 hover:shadow-md hover:shadow-purple-100/50 transition-all cursor-pointer"
+                className="group relative p-4 rounded-xl border border-slate-100 hover:border-purple-200 hover:bg-gradient-to-br hover:from-white hover:to-purple-50/30 hover:shadow-sm transition-all cursor-pointer"
                 onClick={() => openRoadmap(slugify(roadmap.title))}
               >
                 <div className="flex items-start justify-between mb-2">
@@ -99,7 +102,7 @@ export default function PinnedTargets({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="group relative p-3 rounded-xl border border-purple-100 hover:border-purple-300 bg-gradient-to-br from-white to-purple-50/40 hover:shadow-md hover:shadow-purple-100/50 transition-all"
+                className="group relative p-3 rounded-xl border border-slate-100 hover:border-purple-200 hover:bg-gradient-to-br hover:from-white hover:to-purple-50/30 hover:shadow-sm transition-all"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">

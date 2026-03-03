@@ -40,7 +40,7 @@ export default function GoalsOverlay({
           />
 
           <motion.div
-            className="relative w-full max-w-xl mx-4 bg-white rounded-2xl shadow-2xl border border-blue-200/60 overflow-hidden max-h-[80vh] flex flex-col"
+            className="relative w-full max-w-xl mx-4 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden max-h-[80vh] flex flex-col"
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -48,10 +48,10 @@ export default function GoalsOverlay({
           >
             <div className="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-sky-50/60">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-blue-900">All Goals</h2>
+                <h2 className="text-xl font-bold text-slate-800">All Goals</h2>
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-lg hover:bg-blue-100 transition-colors"
+                  className="p-2 rounded-lg hover:bg-purple-100 transition-colors"
                 >
                   <X className="w-5 h-5 text-slate-500" />
                 </button>
@@ -63,7 +63,7 @@ export default function GoalsOverlay({
                   placeholder="Filter by text..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-blue-200 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-purple-300 transition-all"
                   autoFocus
                 />
               </div>
@@ -80,7 +80,7 @@ export default function GoalsOverlay({
                   <motion.div
                     key={goal.id}
                     layout
-                    className="group flex items-center justify-between gap-4 p-3 rounded-xl border border-slate-100 hover:border-blue-300 hover:bg-gradient-to-r hover:from-white hover:to-blue-50/40 hover:shadow-sm transition-all"
+                    className="group flex items-center justify-between gap-4 p-3 rounded-xl border border-slate-100 hover:border-purple-200 hover:bg-gradient-to-r hover:from-white hover:to-purple-50/40 hover:shadow-sm transition-all"
                   >
                     <div className="flex-1 min-w-0">
                       <p
@@ -105,13 +105,13 @@ export default function GoalsOverlay({
                     </div>
                     <button
                       onClick={() => toggleGoalPin(goal.id)}
-                      className="shrink-0 p-2 rounded-lg transition-all text-slate-400 hover:bg-blue-50 hover:text-blue-600"
+                      className="group shrink-0 p-2 rounded-lg transition-all hover:bg-purple-50"
                       title={goal.isPinned ? 'Unpin' : 'Pin'}
                     >
                       {goal.isPinned ? (
-                        <PinOff className="w-4 h-4" />
+                        <PinOff className="w-4 h-4 text-purple-600" />
                       ) : (
-                        <Pin className="w-4 h-4" />
+                        <Pin className="w-4 h-4 text-slate-400 group-hover:text-purple-500 transition-colors" />
                       )}
                     </button>
                   </motion.div>

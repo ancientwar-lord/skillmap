@@ -1,4 +1,4 @@
-import { CheckCircle2, Circle, Trash2 } from 'lucide-react';
+import { CheckCircle2, Circle, Trash2, Eye } from 'lucide-react';
 import { Todo } from '../lib/types';
 import { useState } from 'react';
 
@@ -20,15 +20,16 @@ export default function TodoSection({
   const [input, setInput] = useState('');
 
   return (
-    <section className="lg:col-span-1 bg-white rounded-2xl border border-blue-200/60 shadow-sm shadow-blue-100/40 overflow-hidden flex flex-col">
-      <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Today`s Todos</h2>
+    <section className="lg:col-span-1 bg-white rounded-2xl border border-slate-200/80 shadow-sm shadow-slate-100/40 overflow-hidden flex flex-col">
+      <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-sky-50/60 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-slate-800">Today`s Todos</h2>
         {onShowAll && (
           <button
             onClick={onShowAll}
-            className="text-sm text-indigo-600 hover:underline"
+            className="text-xs font-medium text-purple-600 hover:text-purple-800 hover:bg-purple-50 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
           >
-            Show previous todos
+            <Eye className="w-3.5 h-3.5" />
+            Show previous
           </button>
         )}
       </div>
@@ -76,7 +77,7 @@ export default function TodoSection({
             placeholder="What do you need to do?"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            className="flex-1 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+            className="flex-1 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
           />
           <button
             onClick={() => {
@@ -85,7 +86,7 @@ export default function TodoSection({
                 setInput('');
               }
             }}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition"
+            className="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition"
           >
             Add
           </button>
