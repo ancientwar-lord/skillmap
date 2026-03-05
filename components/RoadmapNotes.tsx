@@ -147,13 +147,17 @@ function StatusBadge({ status }: { status: SaveStatus }) {
 
 // ── Main component ──
 interface RoadmapNotesProps {
-  roadmapId: string;
+  roadmapId?: string;
   initialNotes?: string | null;
+  onSave?: (notes: string) => void;
+  saveFn?: (text: string) => Promise<void>;
 }
 
 export default function RoadmapNotes({
   roadmapId,
   initialNotes,
+  onSave,
+  saveFn,
 }: RoadmapNotesProps) {
   const [notes, setNotes] = useState(initialNotes ?? '');
   const [lastSaved, setLastSaved] = useState(initialNotes ?? '');
@@ -163,8 +167,6 @@ export default function RoadmapNotes({
   const hasUserEdited = useRef(false);
 
   const links = useMemo(() => extractLinks(notes), [notes]);
-
-  // Auto-save on debounced change
   const saveNotes = useCallback(
     async (text: string) => {
       if (text === lastSaved) {
@@ -173,20 +175,25 @@ export default function RoadmapNotes({
       }
       setStatus('saving');
       try {
-        const res = await fetch('/api/roadmaps/notes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ roadmapId, notes: text }),
-        });
-        if (!res.ok) throw new Error('Failed to save');
+        if (saveFn) {
+          await saveFn(text);
+        } else {
+          const res = await fetch('/api/roadmaps/notes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roadmapId, notes: text }),
+          });
+          if (!res.ok) throw new Error('Failed to save');
+        }
         setLastSaved(text);
         setStatus('saved');
         hasUserEdited.current = false;
+        onSave?.(text);
       } catch {
         setStatus('error');
       }
     },
-    [roadmapId, lastSaved]
+    [roadmapId, lastSaved, onSave, saveFn]
   );
 
   useEffect(() => {

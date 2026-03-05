@@ -41,6 +41,7 @@ export async function GET() {
         id: roadmap.id,
         title: roadmap.title,
         description: roadmap.description,
+        notes: roadmap.notes,
         isPinned: roadmap.isPinned,
         taskCount: roadmap.tasks.length,
         subtaskCount: totalSubtasks,

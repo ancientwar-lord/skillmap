@@ -17,6 +17,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   roadmaps      Roadmap[]
+  notes          Note[]
   subtaskProgress RoadmapSubtaskProgress[]
   testResults   TestResult[]
   routineTodos  RoutineTodo[]
@@ -44,6 +45,22 @@ model Roadmap {
 
   @@index([authorId])
   @@map("roadmap")
+}
+
+// generic user-owned notes
+model Note {
+  id               String   @id @default(cuid())
+  title            String   @db.VarChar(255)
+  content          String   @db.Text
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  requiresRevision Boolean  @default(false)
+  lastSeenAt       DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@map("note")
 }
 
 model RoadmapTask {

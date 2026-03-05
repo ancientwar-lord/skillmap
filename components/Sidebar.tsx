@@ -12,6 +12,7 @@ import {
   Map,
   Brain,
   GraduationCap,
+  ClipboardList,
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -39,6 +40,7 @@ export default function Sidebar({
     { name: 'Practice Skills', href: '/practice', icon: <Brain size={20} /> },
     { name: 'Apply Skills', href: '/apply', icon: <Laptop size={20} /> },
     { name: 'Goal Settings', href: '/goal-settings', icon: <Goal size={20} /> },
+    { name: 'Notes', href: '/notes', icon: <ClipboardList size={20} /> },
   ];
 
   return (
