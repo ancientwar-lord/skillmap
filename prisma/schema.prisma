@@ -24,6 +24,7 @@ model User {
   goalItems     GoalItem[]
   skillEmbedding  Float[]
   recommendedJobs RecommendedJob[]
+  goalLogs        GoalLog[]
 
   @@map("user")
 }
@@ -238,7 +239,10 @@ model GoalItem {
   completed  Boolean  @default(false)
   isPinned   Boolean  @default(false)
   order      Int      @default(0)
+  startDate DateTime?
   targetDate DateTime?
+  isRepetitive Boolean    @default(false)
+  logs         GoalLog[]
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -249,6 +253,33 @@ model GoalItem {
   @@map("goal_item")
 }
 
+model GoalLog {
+  id          String    @id @default(cuid())
+  
+  goalId      String
+  goal        GoalItem  @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  /// The string representing the time period for this completion log.
+  /// Examples: 
+  /// - DAILY: "2026-03-05" (YYYY-MM-DD)
+  /// - WEEKLY: "2026-W10" (YYYY-Www)
+  /// - MONTHLY: "2026-03" (YYYY-MM)
+  periodKey   String    @db.VarChar(20)
+  isCompleted Boolean   @default(false)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([goalId, periodKey]) 
+  @@index([userId])
+  @@index([periodKey])
+  @@map("goal_log")
+}
+
+//Job Structure
 model Job {
   id          String   @id @default(cuid())
   title       String
@@ -273,5 +304,3 @@ model RecommendedJob {
   @@index([userId])
   @@index([jobId])
 }
-
-

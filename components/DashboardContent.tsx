@@ -63,7 +63,6 @@ export default function DashboardContent({
 
   const pinnedRoadmaps = roadmaps.filter((r) => pinnedIds.has(r.id));
   const pinnedGoals = goals.filter((g) => g.isPinned);
-  const visibleGoals = goals.filter((g) => !g.isPinned);
   const archivedRoadmaps = roadmaps
     .filter((r) => !pinnedIds.has(r.id))
     .slice(0, 4);
@@ -124,6 +123,33 @@ export default function DashboardContent({
       setGoals((prev) =>
         prev.map((g) => (g.id === id ? { ...g, isPinned: !g.isPinned } : g))
       );
+    }
+  };
+
+  const toggleGoalCompleted = async (id: string) => {
+    const goal = goals.find((g) => g.id === id);
+    if (!goal) return;
+    const newCompleted = !goal.completed;
+
+    // Optimistic update
+    setGoals((prev) =>
+      prev.map((g) => (g.id === id ? { ...g, completed: newCompleted } : g))
+    );
+
+    if (goal.isRepetitive) {
+      try {
+        await fetch('/api/goals/toggle-log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ goalId: id, isCompleted: newCompleted }),
+        });
+      } catch {
+        setGoals((prev) =>
+          prev.map((g) =>
+            g.id === id ? { ...g, completed: !newCompleted } : g
+          )
+        );
+      }
     }
   };
 
@@ -215,6 +241,7 @@ export default function DashboardContent({
           goals={pinnedGoals}
           togglePin={togglePin}
           toggleGoalPin={toggleGoalPin}
+          toggleGoalCompleted={toggleGoalCompleted}
           openRoadmap={openRoadmap}
         />
         <TodoSection
@@ -226,12 +253,7 @@ export default function DashboardContent({
         />
       </div>
 
-      <GoalsSection
-        goals={goals}
-        visibleGoals={visibleGoals}
-        toggleGoalPin={toggleGoalPin}
-        onShowAll={openGoalsOverlay}
-      />
+      <GoalsSection onShowAll={openGoalsOverlay} />
 
       <ArchivedRoadmaps
         archivedRoadmaps={archivedRoadmaps}
@@ -250,6 +272,7 @@ export default function DashboardContent({
         onClose={() => setShowGoalsOverlay(false)}
         goals={goals}
         toggleGoalPin={toggleGoalPin}
+        toggleGoalCompleted={toggleGoalCompleted}
       />
 
       <RoadmapOverlay

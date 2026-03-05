@@ -1,5 +1,12 @@
 import { motion } from 'framer-motion';
-import { PinOff, MapPin, ListTodo, CheckCircle2, Target } from 'lucide-react';
+import {
+  PinOff,
+  MapPin,
+  ListTodo,
+  CheckCircle2,
+  Target,
+  Check,
+} from 'lucide-react';
 import ProgressBar from './ProgressBar';
 import { RoadmapSummary, GoalItem } from '../lib/types';
 import { formatDate, slugify } from '@/lib/utils';
@@ -9,6 +16,7 @@ interface Props {
   goals: GoalItem[];
   togglePin: (id: string) => void;
   toggleGoalPin: (id: string) => void;
+  toggleGoalCompleted: (id: string) => void;
   openRoadmap: (slug: string) => void;
 }
 
@@ -17,6 +25,7 @@ export default function PinnedTargets({
   goals,
   togglePin,
   toggleGoalPin,
+  toggleGoalCompleted,
   openRoadmap,
 }: Props) {
   return (
@@ -105,20 +114,44 @@ export default function PinnedTargets({
                 className="group relative p-3 rounded-xl border border-slate-100 hover:border-purple-200 hover:bg-gradient-to-br hover:from-white hover:to-purple-50/30 hover:shadow-sm transition-all"
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-slate-800 truncate text-sm">
-                      {goal.text}
-                    </h3>
-                    {goal.category && (
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {goal.category.toLowerCase()} goal
-                      </p>
-                    )}
-                    {goal.targetDate && (
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        due {formatDate(goal.targetDate)}
-                      </p>
-                    )}
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div
+                      onClick={() => toggleGoalCompleted(goal.id)}
+                      className={`w-5 h-5 rounded-full border flex items-center justify-center cursor-pointer transition shrink-0 mt-0.5
+                        ${
+                          goal.completed
+                            ? 'bg-green-500 border-green-500'
+                            : 'border-slate-300 hover:border-green-400'
+                        }`}
+                    >
+                      {goal.completed && (
+                        <Check size={14} className="text-white" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3
+                        className={`font-semibold truncate text-sm ${goal.completed ? 'line-through text-slate-400' : 'text-slate-800'}`}
+                      >
+                        {goal.text}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {goal.category && (
+                          <p className="text-xs text-slate-500">
+                            {goal.category.toLowerCase()} goal
+                          </p>
+                        )}
+                        {goal.isRepetitive && (
+                          <span className="text-xs text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded">
+                            repetitive
+                          </span>
+                        )}
+                      </div>
+                      {goal.targetDate && (
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          due {formatDate(goal.targetDate)}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <button
                     onClick={() => toggleGoalPin(goal.id)}

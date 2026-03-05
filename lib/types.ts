@@ -101,7 +101,9 @@ export interface GoalItem {
   id: string;
   text: string;
   completed: boolean;
+  startDate?: string | null;
   targetDate?: string | null;
   isPinned: boolean;
+  isRepetitive?: boolean;
   category?: string | null;
 }

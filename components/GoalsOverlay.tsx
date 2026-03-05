@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { Search, X, Pin, PinOff } from 'lucide-react';
+import { Search, X, Pin, PinOff, Check } from 'lucide-react';
 import { GoalItem } from '../lib/types';
 
 interface Props {
@@ -8,6 +8,7 @@ interface Props {
   onClose: () => void;
   goals: GoalItem[];
   toggleGoalPin: (id: string) => void;
+  toggleGoalCompleted: (id: string) => void;
 }
 
 export default function GoalsOverlay({
@@ -15,6 +16,7 @@ export default function GoalsOverlay({
   onClose,
   goals,
   toggleGoalPin,
+  toggleGoalCompleted,
 }: Props) {
   const [query, setQuery] = useState('');
 
@@ -82,26 +84,48 @@ export default function GoalsOverlay({
                     layout
                     className="group flex items-center justify-between gap-4 p-3 rounded-xl border border-slate-100 hover:border-purple-200 hover:bg-gradient-to-r hover:from-white hover:to-purple-50/40 hover:shadow-sm transition-all"
                   >
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className={`text-sm truncate ${
-                          goal.completed
-                            ? 'line-through text-slate-400'
-                            : 'text-slate-700'
-                        }`}
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div
+                        onClick={() => toggleGoalCompleted(goal.id)}
+                        className={`w-5 h-5 rounded-full border flex items-center justify-center cursor-pointer transition shrink-0
+                          ${
+                            goal.completed
+                              ? 'bg-green-500 border-green-500'
+                              : 'border-slate-300 hover:border-green-400'
+                          }`}
                       >
-                        {goal.text}
-                      </p>
-                      {goal.category && (
-                        <p className="text-xs text-slate-400 mt-0.5">
-                          {goal.category.toLowerCase()}
+                        {goal.completed && (
+                          <Check size={14} className="text-white" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={`text-sm truncate ${
+                            goal.completed
+                              ? 'line-through text-slate-400'
+                              : 'text-slate-700'
+                          }`}
+                        >
+                          {goal.text}
                         </p>
-                      )}
-                      {goal.targetDate && (
-                        <p className="text-xs text-slate-400 mt-0.5">
-                          due {new Date(goal.targetDate).toLocaleDateString()}
-                        </p>
-                      )}
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {goal.category && (
+                            <p className="text-xs text-slate-400">
+                              {goal.category.toLowerCase()}
+                            </p>
+                          )}
+                          {goal.isRepetitive && (
+                            <span className="text-xs text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded">
+                              repetitive
+                            </span>
+                          )}
+                        </div>
+                        {goal.targetDate && (
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            due {new Date(goal.targetDate).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
                     </div>
                     <button
                       onClick={() => toggleGoalPin(goal.id)}
