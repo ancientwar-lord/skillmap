@@ -155,11 +155,27 @@ export default function GoalsSection({ onShowAll }: Props) {
 
   const backlogItems = allItems.filter((it) => {
     if (it.completed || it.isPinned) return false;
-    if (!it.targetDate) return false;
-    const t = new Date(it.targetDate);
-    t.setHours(0, 0, 0, 0);
-    return t < today;
+    // Non-repetitive: overdue by targetDate
+    if (it.targetDate) {
+      const t = new Date(it.targetDate);
+      t.setHours(0, 0, 0, 0);
+      if (t < today) return true;
+    }
+    return false;
   });
+
+  // Repetitive goals with missed periods (for backlog display)
+  const missedPeriodEntries: {
+    item: GoalItem & { cat: Category };
+    periodKey: string;
+  }[] = [];
+  for (const it of allItems) {
+    if (it.isRepetitive && it.missedPeriods && it.missedPeriods.length > 0) {
+      for (const pk of it.missedPeriods) {
+        missedPeriodEntries.push({ item: it, periodKey: pk });
+      }
+    }
+  }
 
   const upcomingItems = allItems.filter((it) => {
     if (it.completed || it.isPinned) return false;
@@ -227,6 +243,32 @@ export default function GoalsSection({ onShowAll }: Props) {
     });
   };
 
+  const markPeriodComplete = async (
+    cat: Category,
+    goalId: string,
+    periodKey: string
+  ) => {
+    // Optimistically remove the missed period from listing
+    setListing((prev) => ({
+      ...prev,
+      [cat]: (prev[cat] ?? []).map((it) =>
+        it.id === goalId
+          ? {
+              ...it,
+              missedPeriods: (it.missedPeriods ?? []).filter(
+                (p) => p !== periodKey
+              ),
+            }
+          : it
+      ),
+    }));
+    await fetch('/api/goals/toggle-log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ goalId, isCompleted: true, periodKey }),
+    });
+  };
+
   // ── Render ───────────────────────────────────────────────────────────
   return (
     <section className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden mt-6">
@@ -276,6 +318,54 @@ export default function GoalsSection({ onShowAll }: Props) {
 
           {/* ── Right: Backlog + Upcoming ── */}
           <div className="flex flex-col divide-y divide-slate-100">
+            {/* Backlog */}
+            {(backlogItems.length > 0 || missedPeriodEntries.length > 0) && (
+              <div className="p-4 space-y-2 max-h-[230px] overflow-y-auto">
+                <p className="text-xs font-semibold text-red-600 uppercase tracking-wide mb-2 flex items-center gap-1">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  Backlog
+                </p>
+                {backlogItems.map((it) => (
+                  <GoalRow
+                    key={it.id}
+                    item={it}
+                    onToggleComplete={() => toggleComplete(it.cat, it.id)}
+                    onTogglePin={() => togglePin(it.cat, it.id)}
+                  />
+                ))}
+                {missedPeriodEntries.map(({ item, periodKey }) => (
+                  <div
+                    key={`${item.id}-${periodKey}`}
+                    className="flex items-center justify-between p-2.5 rounded-xl border border-red-100 hover:bg-red-50 transition"
+                  >
+                    <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                      <div
+                        onClick={() =>
+                          markPeriodComplete(item.cat, item.id, periodKey)
+                        }
+                        className="w-5 h-5 rounded-full border border-slate-300 hover:border-green-400 hover:bg-green-50 flex items-center justify-center cursor-pointer transition shrink-0"
+                        title="Mark this period as complete"
+                      >
+                        <Check
+                          size={11}
+                          className="text-slate-300 hover:text-green-400"
+                        />
+                      </div>
+                      <span className="text-sm text-slate-700 truncate">
+                        {item.text}
+                        <span className="text-xs text-slate-400 ml-2">
+                          {item.cat.toLowerCase()}
+                        </span>
+                      </span>
+                      <span className="text-xs text-red-600 bg-red-50 px-1.5 py-0.5 rounded border border-red-200 shrink-0">
+                        {periodKey}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="p-4 space-y-2 max-h-[230px] overflow-y-auto">
               <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-2 flex items-center gap-1">
                 <CalendarClock className="w-3.5 h-3.5" />

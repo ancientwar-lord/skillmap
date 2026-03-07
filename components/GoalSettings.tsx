@@ -350,6 +350,13 @@ function GoalsOverview() {
   const hasBacklogItems = categories.some(
     (cat) => backlogByCategory[cat].length > 0
   );
+  const hasMissedPeriods = categories.some((cat) =>
+    (listing[cat] ?? []).some(
+      (it) => it.isRepetitive && (it.missedPeriods?.length ?? 0) > 0
+    )
+  );
+  const hasBacklogTodos = backlog.some((e) => e.source === 'todo');
+  const hasAnyBacklog = hasBacklogItems || hasMissedPeriods || hasBacklogTodos;
 
   return (
     <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -490,11 +497,7 @@ function GoalsOverview() {
           <AlertTriangle className="w-5 h-5" />
           Backlog
         </h2>
-        {!hasBacklogItems && (
-          <p className="text-sm text-slate-400 italic">
-            No overdue tasks. You&apos;re on track!
-          </p>
-        )}
+
         <div className="space-y-4">
           {categories.map((cat) => {
             const entries = backlogByCategory[cat];

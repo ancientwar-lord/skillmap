@@ -1,8 +1,17 @@
 import { RoadmapSummary, TodoItem } from './types';
 
+// ── IST offset: UTC+5:30 = 330 minutes ─────────────────
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000; // 19800000
+
+/** Convert a Date to a new Date representing the IST wall-clock time in UTC fields */
+function toIST(date: Date): Date {
+  return new Date(date.getTime() + IST_OFFSET_MS);
+}
+
 // ── Period-key utilities ────────────────────────────────
 
 export function getISOWeekNumber(date: Date): number {
+  // date is expected to already be IST-shifted
   const d = new Date(
     Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
   );
@@ -29,15 +38,16 @@ export function getCurrentPeriodKey(
   recurrence: 'DAILY' | 'WEEKLY' | 'MONTHLY',
   now: Date = new Date()
 ): string {
-  const yyyy = now.getUTCFullYear();
-  const mm = String(now.getUTCMonth() + 1).padStart(2, '0');
-  const dd = String(now.getUTCDate()).padStart(2, '0');
+  const ist = toIST(now);
+  const yyyy = ist.getUTCFullYear();
+  const mm = String(ist.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(ist.getUTCDate()).padStart(2, '0');
 
   switch (recurrence) {
     case 'DAILY':
       return `${yyyy}-${mm}-${dd}`;
     case 'WEEKLY': {
-      const week = String(getISOWeekNumber(now)).padStart(2, '0');
+      const week = String(getISOWeekNumber(ist)).padStart(2, '0');
       return `${yyyy}-W${week}`;
     }
     case 'MONTHLY':
@@ -63,15 +73,16 @@ export function getPeriodKeyForDate(
   recurrence: RecurrenceType,
   date: Date
 ): string {
-  const yyyy = date.getUTCFullYear();
-  const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const dd = String(date.getUTCDate()).padStart(2, '0');
+  const ist = toIST(date);
+  const yyyy = ist.getUTCFullYear();
+  const mm = String(ist.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(ist.getUTCDate()).padStart(2, '0');
 
   switch (recurrence) {
     case 'DAILY':
       return `${yyyy}-${mm}-${dd}`;
     case 'WEEKLY': {
-      const week = String(getISOWeekNumber(date)).padStart(2, '0');
+      const week = String(getISOWeekNumber(ist)).padStart(2, '0');
       return `${yyyy}-W${week}`;
     }
     case 'MONTHLY':
@@ -86,28 +97,39 @@ export function generateExpectedPeriods(
 ): string[] {
   const currentKey = getCurrentPeriodKey(recurrence, now);
   const periods: string[] = [];
+
+  // Work in IST for cap calculation
+  const istNow = toIST(now);
   let cap: Date;
   switch (recurrence) {
     case 'DAILY':
       cap = new Date(
-        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 90)
+        Date.UTC(
+          istNow.getUTCFullYear(),
+          istNow.getUTCMonth(),
+          istNow.getUTCDate() - 90
+        )
       );
       break;
     case 'WEEKLY':
       cap = new Date(
         Date.UTC(
-          now.getUTCFullYear(),
-          now.getUTCMonth(),
-          now.getUTCDate() - 12 * 7
+          istNow.getUTCFullYear(),
+          istNow.getUTCMonth(),
+          istNow.getUTCDate() - 12 * 7
         )
       );
       break;
     case 'MONTHLY':
-      cap = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 3, 1));
+      cap = new Date(
+        Date.UTC(istNow.getUTCFullYear(), istNow.getUTCMonth() - 3, 1)
+      );
       break;
   }
 
-  const effectiveStart = startDate.getTime() >= cap.getTime() ? startDate : cap;
+  // Convert startDate to IST for comparison
+  const istStart = toIST(startDate);
+  const effectiveStart = istStart.getTime() >= cap.getTime() ? istStart : cap;
 
   let cursor: Date;
   switch (recurrence) {
@@ -131,9 +153,15 @@ export function generateExpectedPeriods(
       );
       break;
   }
+
+  // Cursor is already in IST-aligned UTC fields, so getPeriodKeyForDate
+  // will apply toIST again — we need to feed it a raw date that, when
+  // shifted by +5:30, gives back our cursor values. So subtract the offset.
+  const cursorToRaw = (c: Date) => new Date(c.getTime() - IST_OFFSET_MS);
+
   const MAX_ITERATIONS = 400;
   for (let i = 0; i < MAX_ITERATIONS; i++) {
-    const key = getPeriodKeyForDate(recurrence, cursor);
+    const key = getPeriodKeyForDate(recurrence, cursorToRaw(cursor));
     if (key === currentKey) break;
     periods.push(key);
 

@@ -70,6 +70,7 @@ export async function GET(_req: Request, { params }: Params) {
       startDate?: Date | null;
       targetDate?: Date | null;
       isRepetitive?: boolean;
+      createdAt?: Date;
       [key: string]: unknown;
     };
     const rawItems = (section?.items ?? []) as RawItem[];
@@ -116,10 +117,13 @@ export async function GET(_req: Request, { params }: Params) {
           : !!i.completed,
         isRepetitive: !!i.isRepetitive,
       };
-      if (i.isRepetitive && i.startDate && isRecurrenceCategory(category)) {
+      if (i.isRepetitive && isRecurrenceCategory(category)) {
+        const effectiveStart = (i.startDate ??
+          i.createdAt ??
+          new Date()) as Date;
         const expectedPeriods = generateExpectedPeriods(
           category as RecurrenceType,
-          i.startDate as Date,
+          effectiveStart,
           now
         );
         const completedPeriods =
